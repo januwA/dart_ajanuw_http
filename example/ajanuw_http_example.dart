@@ -1,31 +1,25 @@
-import 'dart:io';
-
+import 'package:rxdart/rxdart.dart';
 import 'package:ajanuw_http/ajanuw_http.dart';
-import 'package:http/http.dart' show MultipartFile;
-import 'package:http_parser/http_parser.dart' show MediaType;
 
 void main() async {
   AjanuwHttp.basePath = 'http://localhost:3000';
-  var r = await '/upload'.postFile(
-    params: {'name': 'ajanuw'},
-    body: {'data': '111'},
-    files: [
-      await MultipartFile.fromPath('file', './a.jpg'),
 
-      MultipartFile.fromBytes(
-        'file',
-        await File('./a.jpg').readAsBytes(),
-        contentType: MediaType('image', 'jpeg'),
-        filename: 'a.jpg',
-      ),
-
-      MultipartFile.fromBytes(
-        'file',
-        await 'https://i.loli.net/2019/10/01/CVBu2tNMqzOfXHr.png'.readBytes(),
-        contentType: MediaType('image', 'png'),
-        filename: 'CVBu2tNMqzOfXHr.png',
-      ),
-    ],
+  Rx.retry(() {
+    return Stream.fromFuture('/'.get()).map((r) {
+      print(r.statusCode);
+      if (r.statusCode != 200) {
+        throw Stream.error('send a err');
+      }
+      return r;
+    });
+  }, 3)
+      .listen(
+    (r) {
+      print(r.body);
+    },
+    onError: (er) {
+      // If all three fail
+      print('Error: $er');
+    },
   );
-  print(r.body);
 }

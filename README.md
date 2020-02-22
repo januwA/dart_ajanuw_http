@@ -99,6 +99,44 @@ class HeaderInterceptor extends AjanuwHttpInterceptors {
 }
 ```
 
+## Use rxdart for error retry
+```dart
+import 'package:rxdart/rxdart.dart';
+import 'package:ajanuw_http/ajanuw_http.dart';
+
+void main() async {
+  AjanuwHttp.basePath = 'http://localhost:3000';
+
+  Rx.retry(() {
+    return Stream.fromFuture('/'.get()).map((r) {
+      print(r.statusCode);
+      if (r.statusCode != 200) {
+        throw Stream.error('send a err');
+      }
+      return r;
+    });
+  }, 3)
+      .listen(
+    (r) {
+      print(r.body);
+    },
+    onError: (er) {
+      // If all three fail
+      print('Error: $er');
+    },
+  );
+}
+```
+
+If you execute the above example, you may see the following result:
+```sh
+λ dart ./example/ajanuw_http_example.dart
+403
+403
+200
+Hello World!
+```
+
 ## test
 ```sh
 > pub run test
