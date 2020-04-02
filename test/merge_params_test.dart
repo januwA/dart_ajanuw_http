@@ -1,4 +1,4 @@
-import 'package:ajanuw_http/src/util/merge_params.dart';
+import 'package:ajanuw_http/src/util/util.dart';
 import 'package:test/test.dart';
 
 void main() {

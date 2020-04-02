@@ -1,22 +1,17 @@
-import 'package:ajanuw_http/ajanuw_http.dart';
+import 'package:ajanuw_http/src/util/util.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('A group of tests', () {
-    test('toHref Method Test', () {
-      final r = 'http://localhost:3000/api/list';
-      
-      AjanuwHttp.basePath = 'http://localhost:3000/api';
-      expect(AjanuwHttp.toHref('/list'), r);
-      
-      AjanuwHttp.basePath = 'http://localhost:3000/api/';
-      expect(AjanuwHttp.toHref('/list'), r);
-      
-      AjanuwHttp.basePath = 'http://localhost:3000/api/';
-      expect(AjanuwHttp.toHref('list'), r);
-
-      AjanuwHttp.basePath = 'http://localhost:3000/api';
-      expect(AjanuwHttp.toHref('list'), r);
+    test('mergeUrl Method Test', () {
+      expect(mergeUrl('http://localhost:3000', '/api/cats'),
+          'http://localhost:3000/api/cats');
+      expect(mergeUrl('http://localhost:3000/api', '/cats'),
+          'http://localhost:3000/api/cats');
+      expect(mergeUrl('http://localhost:3000/api/', '/cats'),
+          'http://localhost:3000/api/cats');
+      expect(mergeUrl('http://localhost:3000/api', 'cats'),
+          'http://localhost:3000/api/cats');
     });
   });
 }

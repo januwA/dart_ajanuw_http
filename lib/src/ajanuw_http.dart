@@ -1,79 +1,30 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:http/http.dart';
-
 import '../ajanuw_http.dart';
-import 'util/m_r.dart';
-import 'util/merge_params.dart';
+import 'ajanuw_http_config.dart';
+import 'util/util.dart';
 
-BaseRequest _createRequest(AjanuwHttpConfig cfg) {
-  var req;
-  if (cfg.files == null) {
-    req = Request(cfg.method, cfg.url);
-    if (cfg.body != null) {
-      if (cfg.body is String) {
-        req.body = cfg.body;
-      } else if (cfg.body is List) {
-        req.bodyBytes = cfg.body.cast<int>();
-      } else if (cfg.body is Map) {
-        req.bodyFields = cfg.body.cast<String, String>();
-      } else {
-        throw ArgumentError('Invalid request body "${cfg.body}".');
-      }
-    }
-  } else {
-    req = MR(cfg.method, cfg.url, onUploadProgress: cfg.onUploadProgress);
-    if (cfg.body != null) req.fields.addAll(cfg.body);
-    if (cfg.files != null) req.files.addAll(cfg.files);
-  }
-  if (cfg.headers != null) req.headers.addAll(cfg.headers);
-  if (cfg.encoding != null) req.encoding = cfg.encoding;
-
-  return req;
-}
-
-class AjanuwHttpConfig {
-  dynamic url /* String|Uri */;
-  String method;
-  dynamic /* String|List<int>|Map<String, String> */ body;
-  Map<String, dynamic /*String|Iterable<String>*/ > params;
-  Map<String, String> headers;
-  Duration timeout;
-  Encoding encoding;
-
-  /// 请求返回时的进度
-  AjanuwHttpProgress onProgress;
-
-  /// 上传文件时，监听进度
-  AjanuwHttpProgress onUploadProgress;
-
-  /// 文件列表
-  List<MultipartFile> files;
-  AjanuwHttpConfig({
-    this.url,
-    this.method = 'get',
-    this.body,
-    this.params,
-    this.headers,
-    this.timeout,
-    this.encoding,
-    this.onUploadProgress,
-    this.onProgress,
-    this.files,
-  });
-}
-
-Future<Response> ajanuwHttp(AjanuwHttpConfig cfg) async {
+Future<Response> ajanuwHttp(
+  AjanuwHttpConfig cfg, [
+  List<AjanuwHttpInterceptors> interceptors,
+]) async {
   var f = Completer<Response>();
-  cfg.url = mergeParams(cfg.url, cfg.params);
+  handleConfig(cfg);
   assert(cfg.url is Uri);
 
-  // 1. 创建request
-  var req = _createRequest(cfg);
+  // 运行request拦截器
+  if (interceptors != null) {
+    for (var it in interceptors) {
+      if (it == null) continue;
+      cfg = await it.request(cfg);
+    }
+  }
 
-  // 2. 发送
+  // 创建request
+  var req = createRequest(cfg);
+
+  // 发送
   var client = Client();
   var stream = cfg.timeout == null
       ? await client.send(req)
@@ -82,16 +33,16 @@ Future<Response> ajanuwHttp(AjanuwHttpConfig cfg) async {
   var bytes = <int>[];
   var completer = Completer<Uint8List>();
   stream.stream.listen(
-    cfg.onProgress == null
+    cfg.onDownloadProgress == null
         ? (List<int> d) => bytes.addAll(d)
         : (List<int> d) {
             bytes.addAll(d);
-            cfg.onProgress(bytes.length, stream.contentLength);
+            cfg.onDownloadProgress(bytes.length, stream.contentLength);
           },
     onDone: () => completer.complete(Uint8List.fromList(bytes)),
   );
 
-  // 3. 获取response
+  // 获取response
   var res = Response.bytes(
     await completer.future,
     stream.statusCode,
@@ -102,8 +53,22 @@ Future<Response> ajanuwHttp(AjanuwHttpConfig cfg) async {
     reasonPhrase: stream.reasonPhrase,
   );
 
-  f.complete(res);
+  // 运行response拦截器
+  if (interceptors != null) {
+    for (var it in interceptors) {
+      if (it == null) continue;
+      res = await it.response(res);
+    }
+  }
+
+  // 验证状态码q
+  if (cfg.validateStatus == null || cfg.validateStatus(res.statusCode)) {
+    f.complete(res);
+  } else {
+    f.completeError(res);
+  }
 
   client.close();
+
   return f.future;
 }

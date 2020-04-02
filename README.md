@@ -11,10 +11,8 @@ dependencies:
 import 'package:ajanuw_http/ajanuw_http.dart';
 
 void main() async {
-  AjanuwHttp.basePath = 'http://localhost:3000';
-  var r = await '/'.get(
-    params: {'name': 'ajanuw'},
-  );
+  var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
+  var r = await api.get('/cats');
   print(r.body);
 }
 ```
@@ -24,12 +22,9 @@ void main() async {
 import 'package:ajanuw_http/ajanuw_http.dart';
 
 void main() async {
-  AjanuwHttp.basePath = 'http://localhost:3000';
-  var r = await '/'.post(
-    params: {'name': 'ajanuw'},
-    body: {'data': '111'},
-  );
-  print(r.body);
+  var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
+  var r2 = await api.post('/cats');
+  print(r2.body);
 }
 ```
 
@@ -42,27 +37,37 @@ import 'package:http/http.dart' show MultipartFile;
 import 'package:http_parser/http_parser.dart' show MediaType;
 
 void main() async {
-  AjanuwHttp.basePath = 'http://localhost:3000';
-  var r = await '/upload'.postFile(
-    params: {'name': 'ajanuw'},
-    body: {'data': '111'},
-    files: [
-      await MultipartFile.fromPath('file', './a.jpg'),
+import 'dart:io';
 
-      MultipartFile.fromBytes(
-        'file',
-        await File('./a.jpg').readAsBytes(),
-        contentType: MediaType('image', 'jpeg'),
-        filename: 'a.jpg',
-      ),
+import 'package:ajanuw_http/ajanuw_http.dart';
+import 'package:http/http.dart' show MultipartFile;
+import 'package:http_parser/http_parser.dart' show MediaType;
 
-      MultipartFile.fromBytes(
-        'file',
-        await 'https://i.loli.net/2019/10/01/CVBu2tNMqzOfXHr.png'.readBytes(),
-        contentType: MediaType('image', 'png'),
-        filename: 'CVBu2tNMqzOfXHr.png',
-      ),
-    ],
+void main() async {
+  var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api';
+
+  var r = await api.post(
+    '/upload',
+    AjanuwHttpConfig(
+      params: {'name': 'ajanuw'},
+      body: {'data': '111'},
+      files: [
+        await MultipartFile.fromPath('file', './a.jpg'),
+        MultipartFile.fromBytes(
+          'file',
+          await File('./a.jpg').readAsBytes(),
+          contentType: MediaType('image', 'jpeg'),
+          filename: 'a.jpg',
+        ),
+        MultipartFile.fromBytes(
+          'file',
+          await api
+              .readBytes('https://i.loli.net/2019/10/01/CVBu2tNMqzOfXHr.png'),
+          contentType: MediaType('image', 'png'),
+          filename: 'CVBu2tNMqzOfXHr.png',
+        ),
+      ],
+    ),
   );
   print(r.body);
 }
@@ -71,25 +76,15 @@ void main() async {
 ## Use interceptor
 ```dart
 import 'package:ajanuw_http/ajanuw_http.dart';
-import 'package:http/src/base_request.dart';
-import 'package:http/src/base_response.dart';
-import 'package:http/src/request.dart';
-import 'package:http/src/response.dart';
-
-void main() async {
-  AjanuwHttp.basePath = 'http://localhost:3000';
-  AjanuwHttp.interceptors.add(HeaderInterceptor());
-  var r = await '/'.get(
-    params: {'name': 'ajanuw'},
-  );
-  print(r.body);
-}
+import 'package:http/http.dart';
 
 class HeaderInterceptor extends AjanuwHttpInterceptors {
   @override
-  Future<Request> request(BaseRequest request) async {
-    request.headers['X-myname'] = 'ajanuw';
-    return request;
+  Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
+    if (config.method.toLowerCase() == 'post' && config.body is Map) {
+      (config.body as Map)['x-key'] = '拦截器数据';
+    }
+    return config;
   }
 
   @override
@@ -97,18 +92,29 @@ class HeaderInterceptor extends AjanuwHttpInterceptors {
     return response;
   }
 }
+
+void main() async {
+  var api = AjanuwHttp()
+    ..config.baseURL = 'http://localhost:3000/api/'
+    ..interceptors.add(HeaderInterceptor());
+
+  var r = await api.post('/cats', AjanuwHttpConfig(body: {'name': 'ajanuw'}));
+
+  print(r.body);
+}
 ```
 
 ## Use rxdart for error retry
 ```dart
-import 'package:rxdart/rxdart.dart';
 import 'package:ajanuw_http/ajanuw_http.dart';
+import 'package:rxdart/rxdart.dart';
 
 void main() async {
-  AjanuwHttp.basePath = 'http://localhost:3000';
+  var api = AjanuwHttp()
+    ..config.baseURL = 'http://localhost:3000/api/';
 
   Rx.retry(() {
-    return Stream.fromFuture('/'.get()).map((r) {
+    return Stream.fromFuture(api.get('/cats')).map((r) {
       print(r.statusCode);
       if (r.statusCode != 200) {
         throw Stream.error('send a err');
