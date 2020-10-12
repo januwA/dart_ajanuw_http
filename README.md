@@ -33,15 +33,6 @@ void main() async {
 import 'dart:io';
 
 import 'package:ajanuw_http/ajanuw_http.dart';
-import 'package:http/http.dart' show MultipartFile;
-import 'package:http_parser/http_parser.dart' show MediaType;
-
-void main() async {
-import 'dart:io';
-
-import 'package:ajanuw_http/ajanuw_http.dart';
-import 'package:http/http.dart' show MultipartFile;
-import 'package:http_parser/http_parser.dart' show MediaType;
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api';
@@ -53,12 +44,14 @@ void main() async {
       body: {'data': '111'},
       files: [
         await MultipartFile.fromPath('file', './a.jpg'),
+
         MultipartFile.fromBytes(
           'file',
           await File('./a.jpg').readAsBytes(),
           contentType: MediaType('image', 'jpeg'),
           filename: 'a.jpg',
         ),
+
         MultipartFile.fromBytes(
           'file',
           await api
@@ -66,6 +59,7 @@ void main() async {
           contentType: MediaType('image', 'png'),
           filename: 'CVBu2tNMqzOfXHr.png',
         ),
+
       ],
     ),
   );
@@ -110,11 +104,10 @@ import 'package:ajanuw_http/ajanuw_http.dart';
 import 'package:rxdart/rxdart.dart';
 
 void main() async {
-  var api = AjanuwHttp()
-    ..config.baseURL = 'http://localhost:3000/api/';
+  var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
 
   Rx.retry(() {
-    return Stream.fromFuture(api.get('/cats')).map((r) {
+    return api.get('/cats').asStream().map((r) {
       print(r.statusCode);
       if (r.statusCode != 200) {
         throw Stream.error('send a err');
@@ -134,13 +127,14 @@ void main() async {
 }
 ```
 
-If you execute the above example, you may see the following result:
-```sh
-λ dart ./example/ajanuw_http_example.dart
-403
-403
-200
-Hello World!
+## Fetch request error
+```dart
+try {
+  var r = await api.get('');
+  print(r.body);
+} catch (e) {
+  print( (e as Response).body );
+}
 ```
 
 ## test

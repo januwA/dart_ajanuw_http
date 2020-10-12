@@ -1,6 +1,6 @@
+import 'dart:io';
+
 import 'package:ajanuw_http/ajanuw_http.dart';
-import 'package:http/http.dart' show MultipartFile;
-import 'package:http_parser/http_parser.dart' show MediaType;
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api';
@@ -11,13 +11,13 @@ void main() async {
       params: {'name': 'ajanuw'},
       body: {'data': '111'},
       files: [
-        // await MultipartFile.fromPath('file', './a.jpg'),
-        // MultipartFile.fromBytes(
-        //   'file',
-        //   await File('./a.jpg').readAsBytes(),
-        //   contentType: MediaType('image', 'jpeg'),
-        //   filename: 'a.jpg',
-        // ),
+        await MultipartFile.fromPath('file', './a.jpg'),
+        MultipartFile.fromBytes(
+          'file',
+          await File('./a.jpg').readAsBytes(),
+          contentType: MediaType('image', 'jpeg'),
+          filename: 'a.jpg',
+        ),
         MultipartFile.fromBytes(
           'file',
           await api
