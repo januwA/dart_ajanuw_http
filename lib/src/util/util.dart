@@ -16,6 +16,8 @@ AjanuwHttpConfig createConfig(AjanuwHttpConfig config) {
 /// mergeUrl('http://localhost:3000', '/api/list');
 /// ```
 String mergeUrl(String baseURL, String url) {
+  assert(baseURL is String);
+  assert(url is String);
   return url != null
       ? baseURL.replaceAll(RegExp(r'\/+$'), '') +
           '/' +
@@ -39,9 +41,8 @@ Uri mergeParams(
   Map<String, dynamic /*String|Iterable<String>*/ > params, [
   String Function(Map<String, dynamic>) paramsSerializer,
 ]) {
-  if (url is String) {
-    url = Uri.parse(url);
-  }
+  if (url is String) url = Uri.parse(url);
+
   assert(url is Uri);
 
   // 提供了验证器
@@ -103,8 +104,8 @@ BaseRequest createRequest(AjanuwHttpConfig cfg) {
 
 AjanuwHttpConfig handleConfig(AjanuwHttpConfig config) {
   // 拼接baseurl和url
-  if (config.baseURL != null && !Uri.parse(config.url).hasScheme) {
-    config.url = mergeUrl(config.baseURL, config.url);
+  if (config.baseURL != null && !Uri.parse(config.url.toString()).hasScheme) {
+    config.url = mergeUrl(config.baseURL, config.url.toString());
   }
 
   // 拼接params

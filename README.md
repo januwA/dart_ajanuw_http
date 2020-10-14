@@ -75,9 +75,13 @@ import 'package:http/http.dart';
 class HeaderInterceptor extends AjanuwHttpInterceptors {
   @override
   Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
+    config.headers ??= {};
+
     if (config.method.toLowerCase() == 'post' && config.body is Map) {
-      (config.body as Map)['x-key'] = '拦截器数据';
+      (config.body as Map)['x-key'] = 'key';
     }
+
+    config.headers.addAll({'x-senduser': 'ajanuw'});
     return config;
   }
 
