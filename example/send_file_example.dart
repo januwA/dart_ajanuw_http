@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ajanuw_http/ajanuw_http.dart';
+import 'package:http/http.dart';
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api';

@@ -8,12 +8,16 @@ dependencies:
 
 ## Get
 ```dart
+import 'dart:io';
 import 'package:ajanuw_http/ajanuw_http.dart';
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
-  var r = await api.get('/cats');
+  var r = await api.get('/cats'); // Response 
   print(r.body);
+
+  var r2 = await api.getStream('/'); // StreamedResponse 
+  await File('./a.txt').openWrite().addStream(r2.stream);
 }
 ```
 
@@ -86,7 +90,7 @@ class HeaderInterceptor extends AjanuwHttpInterceptors {
   }
 
   @override
-  Future<Response> response(BaseResponse response) async {
+  Future<BaseResponse> response(BaseResponse response, _) async {
     return response;
   }
 }

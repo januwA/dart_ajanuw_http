@@ -9,7 +9,7 @@ class HeaderInterceptor extends AjanuwHttpInterceptors {
   }
 
   @override
-  Future<Response> response(BaseResponse response, _) async {
+  Future<BaseResponse> response(BaseResponse response, _) async {
     return response;
   }
 }

@@ -1,3 +1,7 @@
+## 0.4.0 2020-10-18
+
+* 增加 StreamedResponse api
+
 ## 0.3.1 2020-10-14
 
 * 修复Uri到String的类型错误

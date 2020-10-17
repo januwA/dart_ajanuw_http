@@ -5,11 +5,11 @@ import '../ajanuw_http.dart';
 import 'ajanuw_http_config.dart';
 import 'util/util.dart';
 
-Future<Response> _ajanuwHttp(
+Future<T> _ajanuwHttp<T extends BaseResponse>(
   AjanuwHttpConfig cfg, [
   List<AjanuwHttpInterceptors> interceptors,
 ]) async {
-  var f = Completer<Response>();
+  var f = Completer<T>();
   handleConfig(cfg);
   assert(cfg.url is Uri);
 
@@ -26,32 +26,38 @@ Future<Response> _ajanuwHttp(
 
   // 发送
   var client = Client();
-  var stream = cfg.timeout == null
+  var streamResponse = cfg.timeout == null
       ? await client.send(req)
       : await client.send(req).timeout(cfg.timeout);
 
-  var bytes = <int>[];
-  var bytesCompleter = Completer<List<int>>();
-  stream.stream.listen(
-    cfg.onDownloadProgress == null
-        ? (List<int> d) => bytes.addAll(d)
-        : (List<int> d) {
-            bytes.addAll(d);
-            cfg.onDownloadProgress(bytes.length, stream.contentLength);
-          },
-    onDone: () => bytesCompleter.complete(bytes),
-  );
+  T res;
 
-  // 获取response
-  var res = Response.bytes(
-    await bytesCompleter.future,
-    stream.statusCode,
-    request: stream.request,
-    headers: stream.headers,
-    isRedirect: stream.isRedirect,
-    persistentConnection: stream.persistentConnection,
-    reasonPhrase: stream.reasonPhrase,
-  );
+  if (cfg.httpFutureType == HttpFutureType.Response) {
+    var bytes = <int>[];
+    var bytesCompleter = Completer<List<int>>();
+    streamResponse.stream.listen(
+      cfg.onDownloadProgress == null
+          ? (List<int> d) => bytes.addAll(d)
+          : (List<int> d) {
+              bytes.addAll(d);
+              cfg.onDownloadProgress(
+                  bytes.length, streamResponse.contentLength);
+            },
+      onDone: () => bytesCompleter.complete(bytes),
+    );
+    // 获取response
+    res = Response.bytes(
+      await bytesCompleter.future,
+      streamResponse.statusCode,
+      request: streamResponse.request,
+      headers: streamResponse.headers,
+      isRedirect: streamResponse.isRedirect,
+      persistentConnection: streamResponse.persistentConnection,
+      reasonPhrase: streamResponse.reasonPhrase,
+    ) as T;
+  } else {
+    res = streamResponse as T;
+  }
 
   // 运行response拦截器
   if (interceptors != null) {
@@ -79,13 +85,8 @@ typedef AjanuwHttpProgress = Function(int bytes, int total);
 abstract class AjanuwHttpInterceptors {
   Future<AjanuwHttpConfig> request(AjanuwHttpConfig config);
 
-  Future<Response> response(BaseResponse response, AjanuwHttpConfig config);
+  Future<BaseResponse> response(BaseResponse response, AjanuwHttpConfig config);
 }
-
-AjanuwHttpConfig __defaultConfig = AjanuwHttpConfig(
-  method: 'get',
-  validateStatus: (int status) => status ~/ 100 == 2,
-);
 
 class AjanuwHttp {
   /// 默认配置
@@ -101,22 +102,37 @@ class AjanuwHttp {
   ///   print(r.body);
   /// }
   ///```
-  AjanuwHttp([AjanuwHttpConfig _defaultConfig]) {
-    // 将每次构造的config与[defaultConfig]的合并
-    config = _defaultConfig != null
-        ? _defaultConfig.merge(__defaultConfig)
-        : __defaultConfig.merge(AjanuwHttpConfig());
+  AjanuwHttp() {
+    config = AjanuwHttpConfig()
+      ..method = 'get'
+      ..httpFutureType = HttpFutureType.Response
+      ..validateStatus = (int status) => status ~/ 100 == 2;
   }
 
   /// 所有拦截器
   List<AjanuwHttpInterceptors> interceptors = [];
 
   Future<Response> request(AjanuwHttpConfig config) {
-    // 将每次请求的[config]和构建是的[this.config]合并
-    return _ajanuwHttp(config.merge(this.config), interceptors);
+    // 将当前请求的[config]和全局的[config]合并
+    return _ajanuwHttp<Response>(config.merge(this.config), interceptors);
+  }
+
+  Future<StreamedResponse> requestStream(AjanuwHttpConfig config) {
+    // 将当前请求的[config]和全局的[config]合并
+    return _ajanuwHttp<StreamedResponse>(
+        config.merge(this.config)
+          ..httpFutureType = HttpFutureType.StreamedResponse,
+        interceptors);
   }
 
   Future<Response> head(url, [AjanuwHttpConfig config]) => request(
+        createConfig(config)
+          ..method = 'head'
+          ..url = url,
+      );
+
+  Future<StreamedResponse> headStream(url, [AjanuwHttpConfig config]) =>
+      requestStream(
         createConfig(config)
           ..method = 'head'
           ..url = url,
@@ -128,13 +144,33 @@ class AjanuwHttp {
           ..url = url,
       );
 
+  Future<StreamedResponse> getStream(url, [AjanuwHttpConfig config]) =>
+      requestStream(
+        createConfig(config)
+          ..method = 'get'
+          ..url = url,
+      );
+
   Future<Response> post(url, [AjanuwHttpConfig config]) => request(
         createConfig(config)
           ..method = 'post'
           ..url = url,
       );
 
+  Future<StreamedResponse> postStream(url, [AjanuwHttpConfig config]) =>
+      requestStream(
+        createConfig(config)
+          ..method = 'post'
+          ..url = url,
+      );
+
   Future<Response> put(url, [AjanuwHttpConfig config]) => request(
+        createConfig(config)
+          ..method = 'put'
+          ..url = url,
+      );
+  Future<StreamedResponse> putStream(url, [AjanuwHttpConfig config]) =>
+      requestStream(
         createConfig(config)
           ..method = 'put'
           ..url = url,
@@ -146,19 +182,35 @@ class AjanuwHttp {
           ..url = url,
       );
 
+  Future<StreamedResponse> patchStream(url, [AjanuwHttpConfig config]) =>
+      requestStream(
+        createConfig(config)
+          ..method = 'patch'
+          ..url = url,
+      );
+
   Future<Response> delete(url, [AjanuwHttpConfig config]) => request(
         createConfig(config)
           ..method = 'delete'
           ..url = url,
       );
 
+  Future<StreamedResponse> deleteStream(url, [AjanuwHttpConfig config]) =>
+      requestStream(
+        createConfig(config)
+          ..method = 'delete'
+          ..url = url,
+      );
+
   Future<String> read(url, [AjanuwHttpConfig config]) async {
-    final response = await get(url, config);
+    final response = await get(
+        url, createConfig(config)..httpFutureType = HttpFutureType.Response);
     return response.body;
   }
 
   Future<Uint8List> readBytes(url, [AjanuwHttpConfig config]) async {
-    final response = await get(url, config);
+    final response = await get(
+        url, createConfig(config)..httpFutureType = HttpFutureType.Response);
     return response.bodyBytes;
   }
 }
