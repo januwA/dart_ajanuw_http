@@ -24,8 +24,6 @@ class AjanuwHttpConfig {
   Encoding encoding;
 
   /// 监听下载文件进度
-  ///
-  /// - 如果[httpFutureType]设置为[HttpFutureType.StreamedResponse]那个此函数将不会调用
   AjanuwHttpProgress onDownloadProgress;
 
   /// 监听上传文件进度

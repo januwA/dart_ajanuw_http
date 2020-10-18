@@ -7,11 +7,22 @@ var url = 'https://i.loli.net/2020/01/14/w1dcNtf4SECG6yX.jpg';
 
 void main() async {
   try {
-    var r = await api.getStream(url);
+    var r = await api.getStream(
+      url,
+      AjanuwHttpConfig(
+        onDownloadProgress: (bytes, total) {
+          print((bytes / total * 100).toInt().toString() + '%');
+        },
+      ),
+    );
     var f$ = File('./test.jpg').openWrite();
-    await f$.addStream(r.stream);
-    await f$.close();
-    print('done.');
+    r.stream.listen(
+      f$.add,
+      onDone: () {
+        f$.close();
+        print('done.');
+      },
+    );
   } catch (e) {
     print('Error: ' + e.message);
   }

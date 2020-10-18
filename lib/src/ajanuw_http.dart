@@ -32,16 +32,19 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(
 
   T res;
 
+  // 监听下载进度
+  var bytesLength = 0;
+  streamResponse.stream.listen(
+    cfg.onDownloadProgress == null
+        ? (_) {}
+        : (List<int> d) {
+            bytesLength += d.length;
+            cfg.onDownloadProgress(bytesLength, streamResponse.contentLength);
+          },
+    onDone: client.close,
+  );
+
   if (cfg.httpFutureType == HttpFutureType.Response) {
-    var bytesLength = 0;
-    streamResponse.stream.listen(
-      cfg.onDownloadProgress == null
-          ? (_) {}
-          : (List<int> d) {
-              bytesLength += d.length;
-              cfg.onDownloadProgress(bytesLength, streamResponse.contentLength);
-            },
-    );
     res = await Response.fromStream(streamResponse) as T;
   } else {
     res = streamResponse as T;

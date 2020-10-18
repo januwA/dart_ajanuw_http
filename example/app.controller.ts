@@ -10,19 +10,19 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-@Controller()
+@Controller('/api')
 export class AppController {
-  @Get('/api')
+  @Get()
   get(@Query() query) {
     return query;
   }
 
-  @Post('/api')
+  @Post()
   post(@Body() body) {
     return body;
   }
 
-  @Get('/api/retry')
+  @Get('/retry')
   retry() {
     let t = Math.random();
     console.log(t);
@@ -30,7 +30,7 @@ export class AppController {
     throw new NotFoundException();
   }
 
-  @Post('/api/upload')
+  @Post('/upload')
   @UseInterceptors(FileInterceptor('file'))
   upload(@UploadedFile() file, @Body() body) {
     console.log(file, body);

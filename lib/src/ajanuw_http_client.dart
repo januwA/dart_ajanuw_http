@@ -53,7 +53,6 @@ class AjanuwHttpClient implements Client {
   Future<Uint8List> readBytes(url, {Map<String, String> headers}) =>
       _client.readBytes(url, headers: headers);
 
-  /// 数据接收完后将自动调用[close]，所以这个client只能使用一次
   @override
   Future<StreamedResponse> send(BaseRequest request) async {
     assert(isClosed == false);
@@ -61,10 +60,7 @@ class AjanuwHttpClient implements Client {
     var data$ = StreamController<List<int>>();
     r.stream.listen(
       (value) => data$.sink.add(value),
-      onDone: () {
-        data$.close();
-        close();
-      },
+      onDone: () => data$.close(),
       onError: (e) => data$.addError(e),
     );
     return StreamedResponse(
