@@ -2,12 +2,12 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 
-import '../ajanuw_http.dart';
-
 enum HttpFutureType {
   Response,
   StreamedResponse,
 }
+
+typedef AjanuwHttpProgress = Function(int bytes, int total);
 
 class AjanuwHttpConfig {
   /// String|Uri

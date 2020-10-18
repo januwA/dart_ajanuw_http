@@ -1,3 +1,9 @@
+## 0.4.1 2020-10-18
+
+* 修复 BUG
+* 增加 AjanuwHttpClient
+* 优化 Example
+
 ## 0.4.0 2020-10-18
 
 * 增加 StreamedResponse api

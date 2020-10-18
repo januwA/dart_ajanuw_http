@@ -4,6 +4,7 @@ import 'package:http/http.dart';
 class HeaderInterceptor extends AjanuwHttpInterceptors {
   @override
   Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
+    config.headers ??= {};
     print(config.headers); // {x-b: b, x-a: a}
     return config;
   }
@@ -20,6 +21,6 @@ void main() async {
     ..config.headers = {'x-a': 'a'}
     ..interceptors.add(HeaderInterceptor());
 
-  var r = await api.get('/cats', AjanuwHttpConfig(headers: {'x-b': 'b'}));
+  var r = await api.get('/', AjanuwHttpConfig(headers: {'x-b': 'b'}));
   print(r.body);
 }

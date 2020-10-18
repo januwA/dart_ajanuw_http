@@ -3,16 +3,12 @@ import 'package:rxdart/rxdart.dart';
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
-  Rx.retry(() {
-    return api.get('').asStream().map((r) {
-      if (r.statusCode != 200) {
-        throw Stream.error(r);
-      }
+  Rx.retry<Response>(() {
+    return api.get('/retry').asStream().map((r) {
+      if (r.statusCode != 200) return throw Stream.error(r);
       return r;
-    }).doOnError((error, stacktrace) {
-      return error;
     });
-  }, 3)
+  }, 5)
       .listen(
     (r) => print(r.body),
     onError: (er) => print(er),

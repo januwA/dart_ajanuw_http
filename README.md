@@ -8,27 +8,36 @@ dependencies:
 
 ## Get
 ```dart
-import 'dart:io';
 import 'package:ajanuw_http/ajanuw_http.dart';
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
-  var r = await api.get('/cats'); // Response 
+  var r = await api.get(
+    Uri.parse('/'),
+    AjanuwHttpConfig(params: {'name': 'Ajanuw'}),
+  );
   print(r.body);
-
-  var r2 = await api.getStream('/'); // StreamedResponse 
-  await File('./a.txt').openWrite().addStream(r2.stream);
 }
 ```
 
-## Post
+## Get File
 ```dart
+import 'dart:io';
 import 'package:ajanuw_http/ajanuw_http.dart';
 
+var api = AjanuwHttp();
+var url = 'https://i.loli.net/2020/01/14/w1dcNtf4SECG6yX.jpg';
+
 void main() async {
-  var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
-  var r2 = await api.post('/cats');
-  print(r2.body);
+  try {
+    var r = await api.getStream(url);
+    var f$ = File('./test.jpg').openWrite();
+    await f$.addStream(r.stream);
+    await f$.close();
+    print('done.');
+  } catch (e) {
+    print('Error: ' + e.message);
+  }
 }
 ```
 
@@ -40,11 +49,9 @@ import 'package:ajanuw_http/ajanuw_http.dart';
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api';
-
   var r = await api.post(
     '/upload',
     AjanuwHttpConfig(
-      params: {'name': 'ajanuw'},
       body: {'data': '111'},
       files: [
         await MultipartFile.fromPath('file', './a.jpg'),
@@ -99,9 +106,7 @@ void main() async {
   var api = AjanuwHttp()
     ..config.baseURL = 'http://localhost:3000/api/'
     ..interceptors.add(HeaderInterceptor());
-
-  var r = await api.post('/cats', AjanuwHttpConfig(body: {'name': 'ajanuw'}));
-
+  var r = await api.post('/', AjanuwHttpConfig(body: {'name': 'ajanuw'}));
   print(r.body);
 }
 ```
@@ -113,24 +118,15 @@ import 'package:rxdart/rxdart.dart';
 
 void main() async {
   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
-
-  Rx.retry(() {
-    return api.get('/cats').asStream().map((r) {
-      print(r.statusCode);
-      if (r.statusCode != 200) {
-        throw Stream.error('send a err');
-      }
+  Rx.retry<Response>(() {
+    return api.get('/retry').asStream().map((r) {
+      if (r.statusCode != 200) return throw Stream.error(r);
       return r;
     });
-  }, 3)
+  }, 5)
       .listen(
-    (r) {
-      print(r.body);
-    },
-    onError: (er) {
-      // If all three fail
-      print('Error: $er');
-    },
+    (r) => print(r.body),
+    onError: (er) => print(er),
   );
 }
 ```
@@ -150,3 +146,7 @@ try {
 > pub run test
 > pub run test .\test\ajanuw_http_test.dart
 ```
+
+
+See also:
+- [Examples](https://github.com/januwA/dart_ajanuw_http/tree/master/example)

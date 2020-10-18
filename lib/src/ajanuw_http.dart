@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:http/http.dart';
-import '../ajanuw_http.dart';
+import 'ajanuw_http_client.dart';
 import 'ajanuw_http_config.dart';
 import 'util/util.dart';
 
@@ -25,7 +25,7 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(
   var req = createRequest(cfg);
 
   // 发送
-  var client = Client();
+  var client = AjanuwHttpClient();
   var streamResponse = cfg.timeout == null
       ? await client.send(req)
       : await client.send(req).timeout(cfg.timeout);
@@ -33,28 +33,16 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(
   T res;
 
   if (cfg.httpFutureType == HttpFutureType.Response) {
-    var bytes = <int>[];
-    var bytesCompleter = Completer<List<int>>();
+    var bytesLength = 0;
     streamResponse.stream.listen(
       cfg.onDownloadProgress == null
-          ? (List<int> d) => bytes.addAll(d)
+          ? (_) {}
           : (List<int> d) {
-              bytes.addAll(d);
-              cfg.onDownloadProgress(
-                  bytes.length, streamResponse.contentLength);
+              bytesLength += d.length;
+              cfg.onDownloadProgress(bytesLength, streamResponse.contentLength);
             },
-      onDone: () => bytesCompleter.complete(bytes),
     );
-    // 获取response
-    res = Response.bytes(
-      await bytesCompleter.future,
-      streamResponse.statusCode,
-      request: streamResponse.request,
-      headers: streamResponse.headers,
-      isRedirect: streamResponse.isRedirect,
-      persistentConnection: streamResponse.persistentConnection,
-      reasonPhrase: streamResponse.reasonPhrase,
-    ) as T;
+    res = await Response.fromStream(streamResponse) as T;
   } else {
     res = streamResponse as T;
   }
@@ -74,12 +62,8 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(
     f.completeError(res);
   }
 
-  client.close();
-
   return f.future;
 }
-
-typedef AjanuwHttpProgress = Function(int bytes, int total);
 
 /// 拦截器基类
 abstract class AjanuwHttpInterceptors {

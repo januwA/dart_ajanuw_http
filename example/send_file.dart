@@ -9,7 +9,6 @@ void main() async {
   var r = await api.post(
     '/upload',
     AjanuwHttpConfig(
-      params: {'name': 'ajanuw'},
       body: {'data': '111'},
       files: [
         await MultipartFile.fromPath('file', './a.jpg'),
