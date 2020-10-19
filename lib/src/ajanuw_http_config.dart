@@ -1,13 +1,21 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart';
 
-enum HttpFutureType {
+enum ResponseType {
   Response,
   StreamedResponse,
 }
 
 typedef AjanuwHttpProgress = Function(int bytes, int total);
+
+/// 拦截器基类
+abstract class AjanuwHttpInterceptors {
+  Future<AjanuwHttpConfig> request(AjanuwHttpConfig config);
+
+  Future<BaseResponse> response(BaseResponse response, AjanuwHttpConfig config);
+}
 
 class AjanuwHttpConfig {
   /// String|Uri
@@ -42,7 +50,13 @@ class AjanuwHttpConfig {
   String baseURL;
 
   /// 默认返回[Response]，但是也可以返回[StreamedResponse]
-  HttpFutureType httpFutureType;
+  ResponseType responseType;
+
+  /// 关闭 client，将调用`client.close()`
+  Completer close;
+
+  /// 作用于当前请求的拦截器，调用顺序优先于全局的拦截器
+  List<AjanuwHttpInterceptors> interceptors = [];
 
   AjanuwHttpConfig({
     this.url,
@@ -58,7 +72,9 @@ class AjanuwHttpConfig {
     this.validateStatus,
     this.paramsSerializer,
     this.baseURL,
-    this.httpFutureType,
+    this.responseType,
+    this.close,
+    this.interceptors,
   });
 
   /// 如果当前config的某项为null，则获取[other]里面的值, 并返回一个新的config
@@ -81,22 +97,29 @@ class AjanuwHttpConfig {
       validateStatus: validateStatus ?? other.validateStatus,
       paramsSerializer: paramsSerializer ?? other.paramsSerializer,
       baseURL: baseURL ?? other.baseURL,
-      httpFutureType: httpFutureType ?? other.httpFutureType,
+      responseType: responseType ?? other.responseType,
+      close: close ?? other.close,
+      interceptors: interceptors,
     );
 
-    if (other.params != null) {
-      r.params ??= {};
+    r.params ??= {};
+    if (other.params?.isNotEmpty ?? false) {
       other.params.forEach((key, value) => r.params[key] ??= value);
     }
 
-    if (other.headers != null) {
-      r.headers ??= {};
+    r.headers ??= {};
+    if (other.headers?.isNotEmpty ?? false) {
       other.headers.forEach((key, value) => r.headers[key] ??= value);
     }
 
-    if (other.files != null) {
-      r.files ??= [];
+    r.files ??= [];
+    if (other.files?.isNotEmpty ?? false) {
       r.files.addAll(other.files);
+    }
+
+    r.interceptors ??= [];
+    if (other.interceptors?.isNotEmpty ?? false) {
+      r.interceptors.addAll(other.interceptors);
     }
 
     return r;

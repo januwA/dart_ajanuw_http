@@ -22,8 +22,10 @@ void main() async {
         f$.close();
         print('done.');
       },
+      onError: (e) => f$.close(),
     );
   } catch (e) {
+    print(e.runtimeType);
     print('Error: ' + e.message);
   }
 }

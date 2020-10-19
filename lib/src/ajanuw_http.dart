@@ -5,27 +5,26 @@ import 'ajanuw_http_client.dart';
 import 'ajanuw_http_config.dart';
 import 'util/util.dart';
 
-Future<T> _ajanuwHttp<T extends BaseResponse>(
-  AjanuwHttpConfig cfg, [
-  List<AjanuwHttpInterceptors> interceptors,
-]) async {
+Future<T> _ajanuwHttp<T extends BaseResponse>(AjanuwHttpConfig cfg) async {
+  var client = AjanuwHttpClient();
+  // ignore: unawaited_futures
+  cfg.close?.future?.then((value) => client.close());
+
   var f = Completer<T>();
   handleConfig(cfg);
   assert(cfg.url is Uri);
 
+  cfg.interceptors ??= [];
   // 运行request拦截器
-  if (interceptors != null) {
-    for (var it in interceptors) {
-      if (it == null) continue;
-      cfg = await it.request(cfg);
-    }
+  for (var it in cfg.interceptors) {
+    if (it == null) continue;
+    cfg = await it.request(cfg);
   }
 
   // 创建request
   var req = createRequest(cfg);
 
   // 发送
-  var client = AjanuwHttpClient();
   var streamResponse = cfg.timeout == null
       ? await client.send(req)
       : await client.send(req).timeout(cfg.timeout);
@@ -44,18 +43,18 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(
     onDone: client.close,
   );
 
-  if (cfg.httpFutureType == HttpFutureType.Response) {
+  if (cfg.responseType == ResponseType.Response) {
     res = await Response.fromStream(streamResponse) as T;
-  } else {
+  } else if (cfg.responseType == ResponseType.StreamedResponse) {
     res = streamResponse as T;
+  } else {
+    throw '意外的返回类型: ${cfg.responseType}';
   }
 
   // 运行response拦截器
-  if (interceptors != null) {
-    for (var it in interceptors) {
-      if (it == null) continue;
-      res = await it.response(res, cfg);
-    }
+  for (var it in cfg.interceptors) {
+    if (it == null) continue;
+    res = await it.response(res, cfg);
   }
 
   // 验证状态码q
@@ -66,13 +65,6 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(
   }
 
   return f.future;
-}
-
-/// 拦截器基类
-abstract class AjanuwHttpInterceptors {
-  Future<AjanuwHttpConfig> request(AjanuwHttpConfig config);
-
-  Future<BaseResponse> response(BaseResponse response, AjanuwHttpConfig config);
 }
 
 class AjanuwHttp {
@@ -92,25 +84,20 @@ class AjanuwHttp {
   AjanuwHttp() {
     config = AjanuwHttpConfig()
       ..method = 'get'
-      ..httpFutureType = HttpFutureType.Response
+      ..responseType = ResponseType.Response
       ..validateStatus = (int status) => status ~/ 100 == 2;
   }
 
   /// 所有拦截器
   List<AjanuwHttpInterceptors> interceptors = [];
 
-  Future<Response> request(AjanuwHttpConfig config) {
-    // 将当前请求的[config]和全局的[config]合并
-    return _ajanuwHttp<Response>(config.merge(this.config), interceptors);
-  }
+  Future<Response> request(AjanuwHttpConfig config) => _ajanuwHttp<Response>(
+      config.merge(this.config)..interceptors.addAll(interceptors ?? []));
 
-  Future<StreamedResponse> requestStream(AjanuwHttpConfig config) {
-    // 将当前请求的[config]和全局的[config]合并
-    return _ajanuwHttp<StreamedResponse>(
-        config.merge(this.config)
-          ..httpFutureType = HttpFutureType.StreamedResponse,
-        interceptors);
-  }
+  Future<StreamedResponse> requestStream(AjanuwHttpConfig config) =>
+      _ajanuwHttp<StreamedResponse>(config.merge(this.config)
+        ..responseType = ResponseType.StreamedResponse
+        ..interceptors.addAll(interceptors ?? []));
 
   Future<Response> head(url, [AjanuwHttpConfig config]) => request(
         createConfig(config)
@@ -191,13 +178,13 @@ class AjanuwHttp {
 
   Future<String> read(url, [AjanuwHttpConfig config]) async {
     final response = await get(
-        url, createConfig(config)..httpFutureType = HttpFutureType.Response);
+        url, createConfig(config)..responseType = ResponseType.Response);
     return response.body;
   }
 
   Future<Uint8List> readBytes(url, [AjanuwHttpConfig config]) async {
     final response = await get(
-        url, createConfig(config)..httpFutureType = HttpFutureType.Response);
+        url, createConfig(config)..responseType = ResponseType.Response);
     return response.bodyBytes;
   }
 }

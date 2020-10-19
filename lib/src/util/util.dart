@@ -61,7 +61,7 @@ Uri mergeParams(
     return url;
   }
 
-  if (params != null) {
+  if (params != null && params.isNotEmpty) {
     try {
       url = url.replace(
         queryParameters: Map<String, dynamic>.from({
@@ -78,7 +78,7 @@ Uri mergeParams(
 
 BaseRequest createRequest(AjanuwHttpConfig cfg) {
   var req;
-  if (cfg.files == null) {
+  if (cfg.files?.isEmpty ?? true) {
     req = Request(cfg.method, cfg.url);
     if (cfg.body != null) {
       if (cfg.body is String) {

@@ -4,19 +4,25 @@ import 'package:http/http.dart';
 class HeaderInterceptor extends AjanuwHttpInterceptors {
   @override
   Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
-    config.headers ??= {};
-
-    if (config.method.toLowerCase() == 'post' && config.body is Map) {
-      (config.body as Map)['x-key'] = 'key';
-    }
-
     config.headers.addAll({'x-senduser': 'ajanuw'});
     return config;
   }
 
   @override
   Future<BaseResponse> response(BaseResponse response, _) async {
-    print('response.');
+    return response;
+  }
+}
+
+class HeaderInterceptor2 extends AjanuwHttpInterceptors {
+  @override
+  Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
+    config.headers.addAll({'x-url': config.url.toString()});
+    return config;
+  }
+
+  @override
+  Future<BaseResponse> response(BaseResponse response, _) async {
     return response;
   }
 }
@@ -26,7 +32,19 @@ void main() async {
     ..config.baseURL = 'http://localhost:3000/api/'
     ..interceptors.add(HeaderInterceptor());
 
-  var r = await api.get('/');
+  var r = await api.get(
+    '/',
+    AjanuwHttpConfig(
+      params: {'message': 'test interceptors'},
+      interceptors: [HeaderInterceptor2()],
+    ),
+  );
+  print(r.request.headers);
+  print(r.body);
+
+  // get 2
+  print('==============================================');
+  r = await api.get('/');
   print(r.request.headers);
   print(r.body);
 }

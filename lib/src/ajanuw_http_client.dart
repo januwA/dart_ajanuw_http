@@ -55,7 +55,6 @@ class AjanuwHttpClient implements Client {
 
   @override
   Future<StreamedResponse> send(BaseRequest request) async {
-    assert(isClosed == false);
     var r = await _client.send(request);
     var data$ = StreamController<List<int>>();
     r.stream.listen(
