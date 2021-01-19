@@ -1,3 +1,7 @@
+## 0.5.3 2021-1-19
+
+- fix: mergeParams BUG
+
 ## 0.5.2 2021-1-19
 
 - fix: default config bug

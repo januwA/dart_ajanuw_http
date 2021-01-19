@@ -58,20 +58,21 @@ Uri mergeParams(
         ...url.queryParametersAll,
       }),
     );
+    url = (url as Uri).replace(query: Uri.decodeComponent(url.query));
     return url;
   }
 
   if (params != null && params.isNotEmpty) {
-    try {
-      url = url.replace(
-        queryParameters: Map<String, dynamic>.from({
-          ...url.queryParametersAll,
-          ...params,
-        }),
-      );
-    } catch (e) {
-      rethrow;
-    }
+    url = url.replace(
+      // queryParameters会执行encodeComponent，所以记得decodeComponent
+      // 不然会让用户的数据出现错误
+      // queryParametersAll会执行decodeComponent
+      queryParameters: Map<String, dynamic>.from({
+        ...url.queryParametersAll,
+        ...params,
+      }),
+    );
+    url = (url as Uri).replace(query: Uri.decodeComponent(url.query));
   }
   return url;
 }
