@@ -7,6 +7,11 @@ import 'util/util.dart';
 
 Future<T> _ajanuwHttp<T extends BaseResponse>(AjanuwHttpConfig cfg) async {
   var client = AjanuwHttpClient();
+
+  cfg.method ??= 'get';
+  cfg.responseType ??= ResponseType.Response;
+  cfg.validateStatus ??= (int status) => status ~/ 100 == 2;
+
   // ignore: unawaited_futures
   cfg.close?.future?.then((value) => client.close());
 
@@ -57,8 +62,8 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(AjanuwHttpConfig cfg) async {
     res = await it.response(res, cfg);
   }
 
-  // 验证状态码q
-  if (cfg.validateStatus == null || cfg.validateStatus(res.statusCode)) {
+  // 验证状态码
+  if (cfg.validateStatus(res.statusCode)) {
     f.complete(res);
   } else {
     f.completeError(res);
@@ -69,24 +74,7 @@ Future<T> _ajanuwHttp<T extends BaseResponse>(AjanuwHttpConfig cfg) async {
 
 class AjanuwHttp {
   /// 默认配置
-  AjanuwHttpConfig config;
-
-  ///
-  ///```dart
-  ///import 'package:ajanuw_http/ajanuw_http.dart';
-  ///
-  /// void main() async {
-  ///   var api = AjanuwHttp()..config.baseURL = 'http://localhost:3000/api/';
-  ///   var r = await api.get('/cats');
-  ///   print(r.body);
-  /// }
-  ///```
-  AjanuwHttp() {
-    config = AjanuwHttpConfig()
-      ..method = 'get'
-      ..responseType = ResponseType.Response
-      ..validateStatus = (int status) => status ~/ 100 == 2;
-  }
+  AjanuwHttpConfig config = AjanuwHttpConfig();
 
   /// 所有拦截器
   List<AjanuwHttpInterceptors> interceptors = [];
