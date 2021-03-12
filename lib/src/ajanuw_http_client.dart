@@ -18,8 +18,9 @@ class AjanuwHttpClient implements Client {
   }
 
   @override
-  Future<Response> delete(url, {Map<String, String> headers}) =>
-      _client.delete(url, headers: headers);
+  Future<Response> delete(Uri url,
+          {Map<String, String> headers, Object body, Encoding encoding}) =>
+      _client.delete(url, headers: headers, body: body, encoding: encoding);
 
   @override
   Future<Response> get(url, {Map<String, String> headers}) =>

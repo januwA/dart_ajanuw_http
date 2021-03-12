@@ -1,3 +1,7 @@
+## 0.6.0 2021-3-12
+
+- refactor: update packages
+
 ## 0.5.3 2021-1-19
 
 - fix: mergeParams BUG
