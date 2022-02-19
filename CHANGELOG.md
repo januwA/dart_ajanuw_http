@@ -1,3 +1,8 @@
+## 0.7.0 2022-2-19
+
+- fix: null safe
+
+
 ## 0.6.0 2021-3-12
 
 - refactor: update packages

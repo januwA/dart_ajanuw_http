@@ -1,9 +1,7 @@
-import 'package:http/http.dart';
-
 import '../../ajanuw_http.dart';
 import 'm_r.dart';
 
-AjanuwHttpConfig createConfig(AjanuwHttpConfig config) {
+AjanuwHttpConfig createConfig(AjanuwHttpConfig? config) {
   if (config != null) return config;
   return AjanuwHttpConfig();
 }
@@ -15,8 +13,7 @@ AjanuwHttpConfig createConfig(AjanuwHttpConfig config) {
 /// // http://localhost:3000//api/list
 /// mergeUrl('http://localhost:3000', '/api/list');
 /// ```
-String mergeUrl(String baseURL, String url) {
-  assert(baseURL is String);
+String mergeUrl(String baseURL, String? url) {
   assert(url is String);
   return url != null
       ? baseURL.replaceAll(RegExp(r'\/+$'), '') +
@@ -38,8 +35,8 @@ String mergeUrl(String baseURL, String url) {
 /// ```
 Uri mergeParams(
   dynamic url,
-  Map<String, dynamic /*String|Iterable<String>*/ > params, [
-  String Function(Map<String, dynamic>) paramsSerializer,
+  Map<String, dynamic /*String|Iterable<String>*/ >? params, [
+  String Function(Map<String, dynamic>)? paramsSerializer,
 ]) {
   if (url is String) url = Uri.parse(url);
 
@@ -48,7 +45,7 @@ Uri mergeParams(
   // 提供了验证器
   if (paramsSerializer != null) {
     var oldParams = Uri.parse(url.toString()).queryParametersAll;
-    var query = paramsSerializer(params);
+    var query = paramsSerializer(params!);
 
     // 将验证器返回的params字符串拼接到[url]
     url = url.replace(query: query);
@@ -80,7 +77,7 @@ Uri mergeParams(
 BaseRequest createRequest(AjanuwHttpConfig cfg) {
   var req;
   if (cfg.files?.isEmpty ?? true) {
-    req = Request(cfg.method, cfg.url);
+    req = Request(cfg.method!, cfg.url);
     if (cfg.body != null) {
       if (cfg.body is String) {
         req.body = cfg.body;
@@ -93,7 +90,7 @@ BaseRequest createRequest(AjanuwHttpConfig cfg) {
       }
     }
   } else {
-    req = MR(cfg.method, cfg.url, onUploadProgress: cfg.onUploadProgress);
+    req = MR(cfg.method!, cfg.url, onUploadProgress: cfg.onUploadProgress);
     if (cfg.body != null) req.fields.addAll(cfg.body);
     if (cfg.files != null) req.files.addAll(cfg.files);
   }
@@ -106,7 +103,7 @@ BaseRequest createRequest(AjanuwHttpConfig cfg) {
 AjanuwHttpConfig handleConfig(AjanuwHttpConfig config) {
   // 拼接baseurl和url
   if (config.baseURL != null && !Uri.parse(config.url.toString()).hasScheme) {
-    config.url = mergeUrl(config.baseURL, config.url.toString());
+    config.url = mergeUrl(config.baseURL!, config.url.toString());
   }
 
   // 拼接params

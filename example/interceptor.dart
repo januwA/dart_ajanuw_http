@@ -1,10 +1,9 @@
 import 'package:ajanuw_http/ajanuw_http.dart';
-import 'package:http/http.dart';
 
 class HeaderInterceptor extends AjanuwHttpInterceptors {
   @override
   Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
-    config.headers.addAll({'x-senduser': 'ajanuw'});
+    config.headers!.addAll({'x-senduser': 'ajanuw'});
     return config;
   }
 
@@ -17,7 +16,7 @@ class HeaderInterceptor extends AjanuwHttpInterceptors {
 class HeaderInterceptor2 extends AjanuwHttpInterceptors {
   @override
   Future<AjanuwHttpConfig> request(AjanuwHttpConfig config) async {
-    config.headers.addAll({'x-url': config.url.toString()});
+    config.headers!.addAll({'x-url': config.url.toString()});
     return config;
   }
 
@@ -39,12 +38,12 @@ void main() async {
       interceptors: [HeaderInterceptor2()],
     ),
   );
-  print(r.request.headers);
+  print(r.request?.headers);
   print(r.body);
 
   // get 2
   print('==============================================');
   r = await api.get('/');
-  print(r.request.headers);
+  print(r.request?.headers);
   print(r.body);
 }

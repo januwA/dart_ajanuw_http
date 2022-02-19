@@ -26,6 +26,6 @@ void main() async {
     );
   } catch (e) {
     print(e.runtimeType);
-    print('Error: ' + e.message);
+    print(e);
   }
 }

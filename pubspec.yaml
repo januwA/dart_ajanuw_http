@@ -1,14 +1,14 @@
 name: ajanuw_http
 description: http interceptor in dart
-version: 0.6.0
+version: 0.7.0
 # author: Ajanuw
 homepage: https://github.com/januwA/dart_ajanuw_http
 
 environment:
-  sdk: '>=2.7.0 <3.0.0'
+  sdk: '>=2.16.1 <3.0.0'
 
 dependencies:
- http: ^0.13.0
+ http: ^0.13.4
  http_parser: ^4.0.0
 
 dev_dependencies:

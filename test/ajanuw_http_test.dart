@@ -40,12 +40,12 @@ void main() {
       expect(c3.url, '/cats');
       expect(c1.url, null);
 
-      expect(c3.headers['x-a'], '1');
-      expect(c3.headers['x-b'], '1');
+      expect(c3.headers!['x-a'], '1');
+      expect(c3.headers!['x-b'], '1');
 
-      expect(c3.params['name'], 'ajanuw');
-      expect(c3.params['age'], '12');
-      expect(c3.params['token'], '123');
+      expect(c3.params!['name'], 'ajanuw');
+      expect(c3.params!['age'], '12');
+      expect(c3.params!['token'], '123');
     });
   });
 }

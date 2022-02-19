@@ -22,41 +22,41 @@ class AjanuwHttpConfig {
   dynamic url;
 
   /// 请求方法
-  String method;
+  String? method;
 
   /// String|List<int>|Map<String, String>
   dynamic body;
-  Map<String, dynamic /*String|Iterable<String>*/ > params;
-  Map<String, String> headers;
-  Duration timeout;
-  Encoding encoding;
+  Map<String, dynamic /*String|Iterable<String>*/ >? params;
+  Map<String, String>? headers;
+  Duration? timeout;
+  Encoding? encoding;
 
   /// 监听下载文件进度
-  AjanuwHttpProgress onDownloadProgress;
+  AjanuwHttpProgress? onDownloadProgress;
 
   /// 监听上传文件进度
-  AjanuwHttpProgress onUploadProgress;
+  AjanuwHttpProgress? onUploadProgress;
 
   /// 文件列表
-  List<MultipartFile> files;
+  List<MultipartFile>? files;
 
   /// 允许自定义合法状态码范围
-  bool Function(int status) validateStatus;
+  bool Function(int status)? validateStatus;
 
   /// 自定义params的解析函数
-  String Function(Map<String, dynamic> params) paramsSerializer;
+  String Function(Map<String, dynamic> params)? paramsSerializer;
 
   /// 默认地址
-  String baseURL;
+  String? baseURL;
 
   /// 默认返回[Response]，但是也可以返回[StreamedResponse]
-  ResponseType responseType;
+  ResponseType? responseType;
 
   /// 关闭 client，将调用`client.close()`
-  Completer close;
+  Completer? close;
 
   /// 作用于当前请求的拦截器，调用顺序优先于全局的拦截器
-  List<AjanuwHttpInterceptors> interceptors = [];
+  List<AjanuwHttpInterceptors?>? interceptors = [];
 
   AjanuwHttpConfig({
     this.url,
@@ -104,22 +104,22 @@ class AjanuwHttpConfig {
 
     r.params ??= {};
     if (other.params?.isNotEmpty ?? false) {
-      other.params.forEach((key, value) => r.params[key] ??= value);
+      other.params!.forEach((key, value) => r.params![key] ??= value);
     }
 
     r.headers ??= {};
     if (other.headers?.isNotEmpty ?? false) {
-      other.headers.forEach((key, value) => r.headers[key] ??= value);
+      other.headers!.forEach((key, value) => r.headers![key] ??= value);
     }
 
     r.files ??= [];
     if (other.files?.isNotEmpty ?? false) {
-      r.files.addAll(other.files);
+      r.files!.addAll(other.files!);
     }
 
     r.interceptors ??= [];
     if (other.interceptors?.isNotEmpty ?? false) {
-      r.interceptors.addAll(other.interceptors);
+      r.interceptors!.addAll(other.interceptors!);
     }
 
     return r;

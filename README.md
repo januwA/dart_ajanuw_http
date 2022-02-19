@@ -151,6 +151,7 @@ try {
 ## test
 ```sh
 > pub run test
+> flutter pub run test
 > pub run test .\test\ajanuw_http_test.dart
 ```
 

@@ -19,39 +19,39 @@ class AjanuwHttpClient implements Client {
 
   @override
   Future<Response> delete(Uri url,
-          {Map<String, String> headers, Object body, Encoding encoding}) =>
+          {Map<String, String>? headers, Object? body, Encoding? encoding}) =>
       _client.delete(url, headers: headers, body: body, encoding: encoding);
 
   @override
-  Future<Response> get(url, {Map<String, String> headers}) =>
+  Future<Response> get(url, {Map<String, String>? headers}) =>
       _client.get(url, headers: headers);
 
   @override
-  Future<Response> head(url, {Map<String, String> headers}) =>
+  Future<Response> head(url, {Map<String, String>? headers}) =>
       _client.head(url, headers: headers);
 
   @override
   Future<Response> patch(url,
-          {Map<String, String> headers, body, Encoding encoding}) =>
+          {Map<String, String>? headers, body, Encoding? encoding}) =>
       _client.patch(url, headers: headers, body: body, encoding: encoding);
 
   @override
   Future<Response> post(url,
-          {Map<String, String> headers, body, Encoding encoding}) =>
+          {Map<String, String>? headers, body, Encoding? encoding}) =>
       _client.post(url, headers: headers, body: body, encoding: encoding);
 
   @override
   Future<Response> put(url,
-          {Map<String, String> headers, body, Encoding encoding}) =>
+          {Map<String, String>? headers, body, Encoding? encoding}) =>
       _client.put(url, headers: headers, body: body, encoding: encoding);
 
   @override
-  Future<String> read(url, {Map<String, String> headers}) {
+  Future<String> read(url, {Map<String, String>? headers}) {
     throw UnimplementedError();
   }
 
   @override
-  Future<Uint8List> readBytes(url, {Map<String, String> headers}) =>
+  Future<Uint8List> readBytes(url, {Map<String, String>? headers}) =>
       _client.readBytes(url, headers: headers);
 
   @override

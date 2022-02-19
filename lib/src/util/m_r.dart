@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' show MultipartRequest, ByteStream;
 
 class MR extends MultipartRequest {
-  Function(int bytes, int total) onUploadProgress;
+  Function(int bytes, int total)? onUploadProgress;
   MR(String method, Uri url, {this.onUploadProgress}) : super(method, url);
 
   /// 重写这个方法
@@ -18,7 +18,7 @@ class MR extends MultipartRequest {
       handleData: (List<int> data, EventSink<List<int>> sink) {
         sink.add(data);
         bytes += data.length;
-        onUploadProgress(bytes, total);
+        onUploadProgress!(bytes, total);
       },
     );
     final stream = byteStream.transform(t);
